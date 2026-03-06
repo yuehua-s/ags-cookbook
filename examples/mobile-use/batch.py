@@ -1189,12 +1189,15 @@ class AsyncSandboxTester:
             md5_result = self._execute_shell('md5sum', [remote_path], return_result=True)
             remote_md5 = md5_result.strip().split()[0] if md5_result else ''
             md5_ms = (time.perf_counter() - t0) * 1000
-            self._log(f"  [upload] MD5 verify: {md5_ms:.0f}ms (match={remote_md5.lower() == local_md5.lower()})")
+            md5_match = remote_md5.lower() == local_md5.lower()
+            self._log(f"  [upload] MD5 verify: {md5_ms:.0f}ms (match={md5_match})")
+            if not md5_match:
+                self._log(f"  [upload] MD5 MISMATCH! local={local_md5}, remote={remote_md5}")
 
             total_ms = (time.perf_counter() - upload_total_start) * 1000
             self._log(f"  [upload] Total: {total_ms:.0f}ms (prep={prep_ms:.0f}, upload={upload_ms:.0f}, merge={merge_ms:.0f}, clean={clean_ms:.0f}, md5={md5_ms:.0f})")
 
-            return remote_md5.lower() == local_md5.lower()
+            return md5_match
 
         except Exception as e:
             if logger:

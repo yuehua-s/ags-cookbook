@@ -587,8 +587,20 @@ def launch_app(driver: WebDriver, app_name: str) -> bool:
             print(f"[ok] {config['name']} launched successfully")
             return True
         elif app_state == 3:
-            print(f"  {config['name']} running in background (state=3), treating as success")
-            print(f"[ok] {config['name']} launched successfully")
+            # App is in background, try to bring it to foreground
+            print(f"  {config['name']} running in background (state=3), attempting to activate...")
+            try:
+                driver.activate_app(config['package'])
+                time.sleep(2)
+                app_state = driver.query_app_state(config['package'])
+            except Exception:
+                pass
+            if app_state == 4:
+                print(f"  {config['name']} now running in foreground")
+                print(f"[ok] {config['name']} launched successfully")
+            else:
+                print(f"  [warning] {config['name']} still in background (state={app_state}), proceeding anyway")
+                print(f"[ok] {config['name']} launched (background)")
             return True
         
         # Step 2: activate_app didn't work (state={app_state}), fallback to am start -n
